@@ -4,7 +4,7 @@
 /* ------- ROOT VARIABLES ------*/
 :root {
     --container-width-lg: 80%;
-    --container-width-sm: 95%;
+    --container-width-sm: 94%;
 
     --primary-hue: 40;
     --color-primary: #6495ed;
@@ -587,8 +587,6 @@ main .insights small {
 @media screen and (max-width: 768px) {
     .container {
         width: var(--container-width-sm);
-        margin-right: 2rem;
-        margin-left: 0.35rem;
     }
 
     .logo h2 {
@@ -601,10 +599,6 @@ main .insights small {
 
     .profile .info {
         display: none;
-    }
-
-    .theme-toggler {
-        margin-right: 0.8rem;
     }
 
     .products table th {
