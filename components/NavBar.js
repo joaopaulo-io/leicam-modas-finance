@@ -7,7 +7,7 @@ export default function NavBar() {
             <img src="/images/perfil.webp" alt="Foto de perfil" />
           </div>
           <div className="info">
-            <p>Hey, <b>User</b></p>
+            <p>Olá, <b>Usuário</b></p>
             <small>Admin</small>
           </div>
         </div>
