@@ -137,14 +137,16 @@ async function updateFinancialCards() {
     const products = await getProducts();
     const totals = calculateTotals(products);
 
-    const cards = document.querySelectorAll('.insights__container .insight-card');
-    // Supondo ordem: Caixa, Custos, Entradas
-    if(cards.length === 3) {
-        cards[0].querySelector('h2').textContent = formatCurrency(totals.entrada - totals.saida);
-        cards[1].querySelector('h2').textContent = formatCurrency(totals.saida);
-        cards[2].querySelector('h2').textContent = formatCurrency(totals.entrada);
+    // Seleciona todos os cards pelo novo componente React InsightCard
+    const cards = document.querySelectorAll('.insight-card');
+    // Supondo ordem: Caixa Acumulado, Custos e Despesas, Entradas
+    if (cards.length === 3) {
+        cards[0].querySelector('h1').textContent = formatCurrency(totals.entrada - totals.saida); // Caixa Acumulado
+        cards[1].querySelector('h1').textContent = formatCurrency(totals.saida); // Custos e Despesas
+        cards[2].querySelector('h1').textContent = formatCurrency(totals.entrada); // Entradas
     }
 }
+
 
 // ========================
 // RENDER TABLES
