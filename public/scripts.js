@@ -263,6 +263,20 @@ btnDownload.addEventListener('click', async () => {
     doc.setFontSize(10);
     doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 28);
 
+    // ====== Valores dos cards ======
+    const cards = document.querySelectorAll('.insight-card');
+    if (cards.length === 3) {
+        const caixa = cards[0].querySelector('h1').textContent;
+        const custos = cards[1].querySelector('h1').textContent;
+        const entradas = cards[2].querySelector('h1').textContent;
+
+        doc.setFontSize(12);
+        doc.text(`Caixa Acumulado: ${caixa}`, 14, 36);
+        doc.text(`Custos e Despesas: ${custos}`, 14, 44);
+        doc.text(`Entradas: ${entradas}`, 14, 52);
+    }
+
+    // ====== Tabela de produtos ======
     const tableData = products.map(p => [
         p.nome,
         formatCurrency(p.valor),
@@ -274,13 +288,14 @@ btnDownload.addEventListener('click', async () => {
     ]);
 
     doc.autoTable({
-        startY: 35,
+        startY: 60,
         head: [['Produto', 'Valor Unitário', 'Data', 'Tipo', 'Quantidade', 'Tamanho', 'Total']],
         body: tableData
     });
 
     doc.save('relatorio_produtos.pdf');
 });
+
 
 // ========================
 // EVENTOS
