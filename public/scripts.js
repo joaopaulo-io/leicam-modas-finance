@@ -3,7 +3,7 @@
 // ========================
 // ELEMENTOS DOM
 // ========================
-const addButton = document.querySelector('.buttons button');
+const addButton = document.querySelector('#btnAdd');
 const productTableBody = document.querySelector('.products tbody');
 const stockTableBody = document.querySelector('.stock tbody');
 const searchInput = document.querySelector('.search-bar input');
@@ -23,7 +23,7 @@ const darkIcon = themeToggler.querySelector('span:nth-child(2)');
 const btnDownload = document.getElementById('btnDownload');
 
 let editingId = null;
-const API_URL = '/api/products'; // Next.js API route
+const API_URL = '/api/products';
 
 // ========================
 // TEMA (Light / Dark)
@@ -67,35 +67,51 @@ function closeModal() {
 async function getProducts() {
     try {
         const res = await fetch(API_URL);
+        if (!res.ok) throw new Error('Erro ao buscar produtos');
         const data = await res.json();
         return Array.isArray(data) ? data : [];
     } catch (err) {
-        console.error('Erro ao buscar produtos:', err);
+        console.error(err);
         return [];
     }
 }
 
 async function addProduct(product) {
-    const res = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(product)
-    });
-    return res.json();
+    try {
+        const res = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(product)
+        });
+        if (!res.ok) throw new Error('Erro ao adicionar produto');
+        return await res.json();
+    } catch (err) {
+        console.error(err);
+    }
 }
 
 async function updateProduct(id, product) {
-    const res = await fetch(API_URL, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, ...product })
-    });
-    return res.json();
+    try {
+        const res = await fetch(API_URL, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, ...product })
+        });
+        if (!res.ok) throw new Error('Erro ao atualizar produto');
+        return await res.json();
+    } catch (err) {
+        console.error(err);
+    }
 }
 
 async function deleteProductById(id) {
-    const res = await fetch(`${API_URL}?id=${id}`, { method: 'DELETE' });
-    return res.json();
+    try {
+        const res = await fetch(`${API_URL}?id=${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Erro ao deletar produto');
+        return await res.json();
+    } catch (err) {
+        console.error(err);
+    }
 }
 
 // ========================
@@ -121,9 +137,13 @@ async function updateFinancialCards() {
     const products = await getProducts();
     const totals = calculateTotals(products);
 
-    document.querySelector('.sales h1').textContent = formatCurrency(totals.entrada - totals.saida);
-    document.querySelector('.expenses h1').textContent = formatCurrency(totals.saida);
-    document.querySelector('.income h1').textContent = formatCurrency(totals.entrada);
+    const cards = document.querySelectorAll('.insights__container .insight-card');
+    // Supondo ordem: Caixa, Custos, Entradas
+    if(cards.length === 3) {
+        cards[0].querySelector('h2').textContent = formatCurrency(totals.entrada - totals.saida);
+        cards[1].querySelector('h2').textContent = formatCurrency(totals.saida);
+        cards[2].querySelector('h2').textContent = formatCurrency(totals.entrada);
+    }
 }
 
 // ========================
@@ -161,13 +181,11 @@ async function renderProductTable(filterText = '') {
     productTableBody.innerHTML = '';
 
     const filteredProducts = products.filter(p => p.nome.toLowerCase().includes(filterText.toLowerCase()));
-
     filteredProducts.forEach(product => productTableBody.appendChild(createProductRow(product)));
 
-    // --- ADD EVENTOS EDIT/DELETE ---
     productTableBody.querySelectorAll('.delete-btn').forEach(btn =>
-        btn.addEventListener('click', async (e) => {
-            const id = e.currentTarget.dataset.id;
+        btn.addEventListener('click', async e => {
+            const id = Number(e.currentTarget.dataset.id);
             if (confirm('Deseja realmente excluir este produto?')) {
                 await deleteProductById(id);
                 await renderProductTable(searchInput.value);
@@ -178,9 +196,9 @@ async function renderProductTable(filterText = '') {
     );
 
     productTableBody.querySelectorAll('.edit-btn').forEach(btn =>
-        btn.addEventListener('click', async (e) => {
-            const id = e.currentTarget.dataset.id;
-            const product = products.find(p => p.id == id);
+        btn.addEventListener('click', e => {
+            const id = Number(e.currentTarget.dataset.id);
+            const product = products.find(p => p.id === id);
             if (!product) return;
 
             inputName.value = product.nome;
@@ -255,36 +273,25 @@ btnDownload.addEventListener('click', async () => {
 
     doc.autoTable({
         startY: 35,
-        head: [['Produto', 'Valor Unitário', 'Data', 'Tipo', 'Qtd', 'Tamanho', 'Valor Total']],
-        body: tableData,
-        styles: { fontSize: 10, halign: 'center' },
-        headStyles: { fillColor: [41, 128, 185] }
+        head: [['Produto', 'Valor Unitário', 'Data', 'Tipo', 'Quantidade', 'Tamanho', 'Total']],
+        body: tableData
     });
 
-    const totals = calculateTotals(products);
-    const finalY = doc.lastAutoTable.finalY + 10;
-    doc.setFontSize(12);
-    doc.text(`Total Entradas: ${formatCurrency(totals.entrada)}`, 14, finalY);
-    doc.text(`Total Saídas: ${formatCurrency(totals.saida)}`, 14, finalY + 6);
-    doc.text(`Caixa Final: ${formatCurrency(totals.entrada - totals.saida)}`, 14, finalY + 12);
-
-    doc.save(`relatorio-produtos-${new Date().toISOString().slice(0,10)}.pdf`);
+    doc.save('relatorio_produtos.pdf');
 });
 
 // ========================
-// EVENT LISTENERS
+// EVENTOS
 // ========================
 addButton.addEventListener('click', () => openModal());
 cancelModalBtn.addEventListener('click', closeModal);
-searchInput.addEventListener('input', () => renderProductTable(searchInput.value));
+searchInput.addEventListener('input', e => renderProductTable(e.target.value));
 themeToggler.addEventListener('click', toggleTheme);
 
 // ========================
-// INICIALIZAÇÃO
+// INIT
 // ========================
-window.addEventListener('DOMContentLoaded', () => {
-    loadTheme();
-    renderProductTable();
-    renderStockTable();
-    updateFinancialCards();
-});
+loadTheme();
+renderProductTable();
+renderStockTable();
+updateFinancialCards();
